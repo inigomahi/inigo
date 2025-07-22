@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Day</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Sacramento&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        /* --- CSS STYLES --- */
+        body{margin:0;font-family:'Montserrat',sans-serif;background:#1a1a2e;color:#e0e0e0;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center}
+        #startScreen,.scene{display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;height:100%}
+        h1,h2,h3{font-family:'Sacramento',cursive;color:#fca311;font-size:5rem;font-weight:normal;margin:1rem 0}
+        h3{font-size:4rem}
+        h2 span{display:inline-block}
+        button{background:#fca311;color:#1a1a2e;border:none;padding:15px 30px;font-size:1em;font-family:'Montserrat',sans-serif;font-weight:bold;cursor:pointer;border-radius:5px;transition:background-color .3s,transform .3s;display:inline-flex;align-items:center;justify-content:center}
+        button:hover{background-color:#e0e0e0;transform:scale(1.05)}
+        button .bi{margin-right:.5rem}
+        #mainContent{width:100%;height:100%;position:relative}
+        .scene{position:absolute;opacity:0;visibility:hidden;padding:20px;box-sizing:border-box}
+        .scene-icon{font-size:3.5rem;color:#fca311;margin-top:1rem}
+        .wish-heading{display:flex;align-items:center;justify-content:center}
+        .birthday-image{width:180px;height:180px;border-radius:50%;border:5px solid #fca311;margin-bottom:20px;object-fit:cover}
+        .wish-text{font-style:italic;max-width:600px;line-height:1.6}
+        p{font-size:1.1rem}
+        #fireworksCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:-1}
+        #cd-container{position:fixed;left:20px;top:50%;transform:translateY(-50%);width:150px;height:150px;z-index:10;opacity:0;visibility:hidden;pointer-events:none}
+        #cd-svg{width:100%;height:100%;animation:spin 10s linear infinite}
+        .cd-text{font-family:'Montserrat',sans-serif;font-weight:bold;font-size:11px;fill:#1a1a2e;text-transform:uppercase;letter-spacing:1px}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        #cake-svg{overflow:visible;max-width:90%}.candle{cursor:pointer}.flame{transform-origin:bottom;opacity:0}.flame.lit{animation:flicker .3s infinite alternate}#cake-wish-text{font-size:1.5rem;color:#fca311;opacity:0}#knife{opacity:0;cursor:grab}#knife.dragging{cursor:grabbing}#cut-line{stroke:#1a1a2e;stroke-width:2;stroke-dasharray:100;stroke-dashoffset:100}@keyframes flicker{0%{transform:scale(1,1)}100%{transform:scale(1.1,.9)}}
+        #music-toggle-btn{position:fixed;top:20px;right:20px;width:50px;height:50px;background:rgba(252,163,17,.8);border-radius:50%;z-index:1000;opacity:0;visibility:hidden;padding:0;font-size:1.8rem}
+        #balloon-container{position:absolute;bottom:-200px;width:100%;height:100%;pointer-events:none}
+        .balloon{position:absolute;width:80px;height:auto;opacity:.8}
+
+        /* 
+        ===============================================================
+        MOBILE RESPONSIVE STYLES - This makes it work on phones!
+        ===============================================================
+        */
+        @media (max-width: 600px) {
+            h1,h2,h3 { font-size: 3.5rem; }
+            h3 { font-size: 3rem; }
+            #cd-container { display: none; } /* Hide CD on small screens to save space */
+            .balloon { width: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;display:flex;justify-content:center;align-items:center;z-index:10000;">
+  <div style="background:#1a1a2e;padding:30px 40px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.5);text-align:center;width:90%;max-width:400px;">
+    <h2 style="margin-bottom:20px;color:#fca311;">Enter to Continue</h2>
+    <input type="text" id="username" placeholder="Name" style="width:100%;padding:10px;margin-bottom:15px;border:1px solid #ccc;border-radius:5px;">
+    <input type="password" id="password" placeholder="Password" style="width:100%;padding:10px;margin-bottom:15px;border:1px solid #ccc;border-radius:5px;">
+    <button onclick="login()" style="padding:10px 20px;background:#fca311;border:none;border-radius:5px;color:#fff;font-weight:bold;cursor:pointer;">Login</button>
+    <p id="errorMsg" style="color:red;margin-top:10px;display:none;">Invalid name or password.</p>
+  </div>
+</div>
+
+    <!-- You can change the music file here -->
+    <audio id="birthday-music" loop>
+        <source src="audio.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- --- HTML CONTENT --- -->
+    <div id="startScreen">
+        <h1 data-node-name="startTitle" class="start-title"></h1>
+        <button id="startButton"><i class="bi bi-play-circle-fill"></i><span data-node-name="startButtonText"></span></button>
+    </div>
+
+    <div id="mainContent" style="display: none;">
+        <button id="music-toggle-btn"><i class="bi bi-pause-circle-fill"></i></button>
+        <div id="cd-container">
+            <svg id="cd-svg" viewBox="0 0 200 200">
+                <defs><radialGradient id="cd-gradient" cx="50%" cy="50%" r="50%"><stop offset="20%" stop-color="#e0e0e0"/><stop offset="70%" stop-color="#fca311"/><stop offset="95%" stop-color="#a0a0a0"/></radialGradient></defs>
+                <circle cx="100" cy="100" r="95" fill="url(#cd-gradient)"/><circle cx="100" cy="100" r="30" fill="#1a1a2e"/>
+                <path id="textPath" fill="none" d="M 40,100 a 60,60 0 1,1 120,0 a 60,60 0 1,1 -120,0"/><text class="cd-text"><textPath href="#textPath" startOffset="50%" text-anchor="middle">Happy Birthday Mekala🎉🥳🎂</textPath></text>
+            </svg>
+        </div>
+
+        <canvas id="fireworksCanvas"></canvas>
+        <div class="scene" id="scene1"><h2 data-node-name="greeting"></h2><i id="greetingIcon" class="bi bi-emoji-smile-fill scene-icon"></i><p data-node-name="greetingText"></p></div>
+        <div class="scene" id="scene2"><p data-node-name="text1"></p><i id="celebrateIcon" class="bi bi-stars scene-icon"></i></div>
+        <div class="scene" id="scene3"><p data-node-name="text2"></p><i id="gratefulIcon" class="bi bi-heart-fill scene-icon"></i><p data-node-name="text3"></p></div>
+        
+        <div class="scene" id="scene_cake">
+            <p id="cake-wish-text">Click the candles to light them...</p>
+            <svg id="cake-svg" viewBox="0 0 200 150">
+                <path d="M10,140 Q5,130 10,120 L190,120 Q195,130 190,140 Z" fill="#7B3F00" /><path d="M10,120 C20,130 40,110 60,120 C80,130 100,110 120,120 C140,130 160,110 180,120 L190,120 L10,120 Z" fill="#F8C8DC" /><path d="M20,110 Q15,100 20,90 L180,90 Q185,100 180,110 Z" fill="#D2691E" />
+                <g class="candle" id="candle1"><rect x="56" y="60" width="8" height="30" fill="#4682B4"/><path class="flame" d="M60,60 Q55,50 60,40 Q65,50 60,60 Z" fill="orange"/></g>
+                <g class="candle" id="candle2"><rect x="96" y="60" width="8" height="30" fill="#4682B4"/><path class="flame" d="M100,60 Q95,50 100,40 Q105,50 100,60 Z" fill="orange"/></g>
+                <g class="candle" id="candle3"><rect x="136" y="60" width="8" height="30" fill="#4682B4"/><path class="flame" d="M140,60 Q135,50 140,40 Q145,50 140,60 Z" fill="orange"/></g>
+                <line id="cut-line" x1="100" y1="90" x2="100" y2="140" /><g id="knife" transform="translate(250, 20) rotate(15)"><path d="M0,0 L100,0 L120,10 L100,20 L0,20 Z" fill="#c0c0c0" /><rect x="-30" y="5" width="30" height="10" rx="3" fill="#5C4033" /></g>
+            </svg>
+        </div>
+
+        <div class="scene" id="scene4"><img data-node-name="imagePath" alt="A special picture" class="birthday-image"><div class="wish-heading"><i id="wishIcon" class="bi bi-gift-fill"></i><h3 data-node-name="wishHeading" style="margin-left: 1rem;"></h3></div><p class="wish-text" data-node-name="wishText"></p></div>
+        
+        <div class="scene" id="scene_balloons">
+            <div id="balloon-container">
+                <img class="balloon" style="left: 10%;" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 125'%3E%3Cpath fill='%23D82A2A' d='M50 5C25.2 5 5 25.2 5 50s20.2 45 45 45 45-20.2 45-45S74.8 5 50 5z'/%3E%3Cpath fill='%23C32222' d='M50 5C25.2 5 5 25.2 5 50c0 12.4 5 23.5 13.1 31.6L50 5z'/%3E%3Cpath fill='white' opacity='.5' d='M30 20c0 0-10 15-10 30s10 30 10 30 15-10 15-30S30 20 30 20z'/%3E%3C/svg%3E">
+                <img class="balloon" style="left: 25%;" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 125'%3E%3Cpath fill='%232A7AD8' d='M50 5C25.2 5 5 25.2 5 50s20.2 45 45 45 45-20.2 45-45S74.8 5 50 5z'/%3E%3Cpath fill='%232262C3' d='M50 5C25.2 5 5 25.2 5 50c0 12.4 5 23.5 13.1 31.6L50 5z'/%3E%3Cpath fill='white' opacity='.5' d='M30 20c0 0-10 15-10 30s10 30 10 30 15-10 15-30S30 20 30 20z'/%3E%3C/svg%3E">
+                <img class="balloon" style="left: 45%;" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 125'%3E%3Cpath fill='%23FAD22A' d='M50 5C25.2 5 5 25.2 5 50s20.2 45 45 45 45-20.2 45-45S74.8 5 50 5z'/%3E%3Cpath fill='%23EBC122' d='M50 5C25.2 5 5 25.2 5 50c0 12.4 5 23.5 13.1 31.6L50 5z'/%3E%3Cpath fill='white' opacity='.5' d='M30 20c0 0-10 15-10 30s10 30 10 30 15-10 15-30S30 20 30 20z'/%3E%3C/svg%3E">
+                <img class="balloon" style="left: 65%;" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 125'%3E%3Cpath fill='%233AD82A' d='M50 5C25.2 5 5 25.2 5 50s20.2 45 45 45 45-20.2 45-45S74.8 5 50 5z'/%3E%3Cpath fill='%232BC322' d='M50 5C25.2 5 5 25.2 5 50c0 12.4 5 23.5 13.1 31.6L50 5z'/%3E%3Cpath fill='white' opacity='.5' d='M30 20c0 0-10 15-10 30s10 30 10 30 15-10 15-30S30 20 30 20z'/%3E%3C/svg%3E">
+                <img class="balloon" style="left: 80%;" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 125'%3E%3Cpath fill='%23D82A7A' d='M50 5C25.2 5 5 25.2 5 50s20.2 45 45 45 45-20.2 45-45S74.8 5 50 5z'/%3E%3Cpath fill='%23C32262' d='M50 5C25.2 5 5 25.2 5 50c0 12.4 5 23.5 13.1 31.6L50 5z'/%3E%3Cpath fill='white' opacity='.5' d='M30 20c0 0-10 15-10 30s10 30 10 30 15-10 15-30S30 20 30 20z'/%3E%3C/svg%3E">
+            </div>
+        </div>
+
+        <div class="scene" id="scene5"><p data-node-name="outroText"></p><button id="replayButton"><i class="bi bi-arrow-clockwise"></i><span data-node-name="replayText"></span></button></div>
+    </div>
+
+    <!-- --- JAVASCRIPT LIBRARIES AND CODE --- -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.2/gsap.min.js"></script>
+    <script>
+        /*
+        ===============================================================
+        CUSTOMIZATION DATA & IMAGE
+        ===============================================================
+        All the text can be changed here. Most importantly, to change 
+        the photo, replace the URL for `imagePath` below.
+        */
+        const config = {
+            startTitle: "Hey, a small surprise wish from Inigo...",
+            startButtonText: "Click to begin",
+            greeting: "Hey Mekala,",
+            greetingText: "I heard today is a special day.",
+            text1: "A day to celebrate you, and everything that makes you amazing.",
+            text2: "Wishing you a year full of happiness, love, and everything your heart desires...",
+            text3: "...Once again wishing you a very happy birthday to you.",
+            imagePath: "img.jpeg",
+            wishHeading: "Happy Birthday!",
+            wishText: "May your day be as bright as your smile and as wonderful as you are.",
+            outroText: "Hope this brought a smile to your face!",
+            replayText: "Watch it Again"
+        };
+        
+        // --- FIREWORKS LOGIC (minified) ---
+        const fireworks=(function(){const e=document.getElementById("fireworksCanvas"),t=e.getContext("2d");let n,o,i=[],a=[],r=!1;const l=function(e,n,o){this.x=e,this.y=n,this.color=o,this.size=2*Math.random()+1,this.vx=6*(Math.random()-.5),this.vy=6*(Math.random()-.5),this.opacity=1,this.gravity=.05};l.prototype.update=function(){this.x+=this.vx,this.y+=this.vy,this.vy+=this.gravity,this.opacity-=.02},l.prototype.draw=function(){t.globalAlpha=this.opacity,t.fillStyle=this.color,t.beginPath(),t.arc(this.x,this.y,this.size,0,2*Math.PI),t.fill()};const s=function(e){this.x=e,this.y=o,this.vx=4*(Math.random()-.5),this.vy=-10*Math.random()-15,this.color=`hsl(${360*Math.random()},100%,70%)`};s.prototype.update=function(){this.x+=this.vx,this.y+=this.vy,this.vy+=.2},s.prototype.draw=function(){t.fillStyle=this.color,t.beginPath(),t.arc(this.x,this.y,3,0,2*Math.PI),t.fill()};function c(e,t,n){for(let o=0;o<100;o++)i.push(new l(e,t,n))}function d(){r&&(t.globalCompositeOperation="destination-out",t.fillStyle="rgba(26,26,46,.1)",t.fillRect(0,0,n,o),t.globalCompositeOperation="lighter",Math.random()<.04&&a.push(new s(Math.random()*n)),function(){for(let e=a.length-1;e>=0;e--)a[e].update(),a[e].draw(),a[e].vy>=0&&(c(a[e].x,a[e].y,a[e].color),a.splice(e,1))}(),function(){for(let e=i.length-1;e>=0;e--)i[e].update(),i[e].draw(),i[e].opacity<=0&&i.splice(e,1)}(),requestAnimationFrame(d))}function p(){n=e.width=window.innerWidth,o=e.height=window.innerHeight}return{start:function(){r||(r=!0,p(),window.addEventListener("resize",p),d())},stop:function(){r=!1,window.removeEventListener("resize",p)}}})();
+
+        // --- MAIN APPLICATION LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const startButton=document.getElementById('startButton'),startScreen=document.getElementById('startScreen'),mainContent=document.getElementById('mainContent'),replayButton=document.getElementById('replayButton'),cdContainer=document.getElementById('cd-container'),audio=document.getElementById('birthday-music'),musicToggleBtn=document.getElementById('music-toggle-btn');
+            function splitTextIntoSpans(e){const t=document.querySelector(e);if(t){const e=t.innerText;return t.innerHTML=e.split("").map(e=>`<span>${" "===e?" ":e}</span>`).join(""),t.querySelectorAll("span")}return[]}
+            Object.keys(config).forEach(e=>{const t=document.querySelector(`[data-node-name="${e}"]`);t&&("IMG"===t.tagName?t.src=config[e]:t.textContent=config[e])}),gsap.from(".start-title",{duration:1,y:-50,autoAlpha:0,ease:"power1.out"});
+            const preCakeTl=gsap.timeline({paused:!0}),postCakeTl=gsap.timeline({paused:!0});
+            preCakeTl.to("#scene1",{autoAlpha:1,duration:.5}).from(splitTextIntoSpans('[data-node-name="greeting"]'),{duration:1.5,y:50,autoAlpha:0,stagger:.1,ease:"back.out(1.7)"}).from("#greetingIcon",{duration:.7,scale:0,autoAlpha:0,ease:"back.out(1.7)"}).from('[data-node-name="greetingText"]',{duration:1,y:20,autoAlpha:0},"-=0.8").to("#scene1",{autoAlpha:0,duration:1,delay:2});
+            preCakeTl.to("#scene2",{autoAlpha:1,duration:.5}).from('[data-node-name="text1"]',{duration:1.5,scale:.5,autoAlpha:0,ease:"elastic.out(1,.5)"}).from("#celebrateIcon",{duration:1,y:50,rotation:-360,autoAlpha:0,ease:"power2.out"},"-=1").to("#scene2",{autoAlpha:0,duration:1,delay:2});
+            preCakeTl.to("#scene3",{autoAlpha:1,duration:.5}).from('[data-node-name="text2"]',{duration:1,x:-100,autoAlpha:0,ease:"power2.out"}).from("#gratefulIcon",{duration:1.2,scale:0,autoAlpha:0,ease:"elastic.out(1,.5)"},"-=0.7").from('[data-node-name="text3"]',{duration:1,x:100,autoAlpha:0,ease:"power2.out"},"-=1").to("#scene3",{autoAlpha:0,duration:1,delay:2.5});
+            preCakeTl.call(startCakeScene);
+            postCakeTl.to("#scene4",{autoAlpha:1,duration:.5}).from(".birthday-image",{duration:1.5,scale:0,rotation:-360,autoAlpha:0,ease:"elastic.out(1,.5)"}).from(".wish-heading",{duration:1,y:-30,autoAlpha:0,ease:"power1.out"},"-=1").from(splitTextIntoSpans('.wish-text'),{duration:1,autoAlpha:0,stagger:.03},"-=0.5").to("#scene4",{autoAlpha:0,duration:1,delay:4});
+            postCakeTl.to("#scene_balloons",{autoAlpha:1,duration:.5}).to(".balloon",{y:-window.innerHeight-200,duration:6,stagger:.3,ease:"power1.in"}).to(".balloon",{x:"+=50",repeat:-1,yoyo:!0,duration:2,ease:"sine.inOut"},"<").to("#scene_balloons",{autoAlpha:0,duration:1,delay:5});
+            postCakeTl.to("#scene5",{autoAlpha:1,duration:.5}).from('[data-node-name="outroText"]',{duration:1,y:20,autoAlpha:0}).from("#replayButton",{duration:1,scale:0,autoAlpha:0,ease:"back.out(1.7)"}).to("#replayButton",{scale:1.1,repeat:-1,yoyo:!0,duration:.8,ease:"power1.inOut"});
+            const candles=document.querySelectorAll(".candle"),flames=document.querySelectorAll(".flame"),wishText=document.getElementById("cake-wish-text"),knife=document.getElementById("knife");let candlesLitCount=0;
+            function startCakeScene(){gsap.to("#scene_cake",{autoAlpha:1,duration:.5}),gsap.from("#cake-svg",{scale:0,autoAlpha:0,duration:1,ease:"back.out(1.7)"}),gsap.to(wishText,{autoAlpha:1,duration:1,delay:1})}
+            candles.forEach((e,t)=>{e.addEventListener("click",()=>{"1"!==flames[t].style.opacity&&(candlesLitCount++,gsap.to(flames[t],{autoAlpha:1,duration:.3}),flames[t].classList.add("lit"),candlesLitCount===candles.length&&(gsap.to(wishText,{text:"Make a wish... then cut the cake!",duration:1,delay:.5}),gsap.to(knife,{autoAlpha:1,x:-150,duration:.7,delay:1.5,ease:"power2.inOut"})))})});
+            let isDragging=!1;knife.addEventListener("pointerdown",()=>{candlesLitCount<candles.length||(isDragging=!0,knife.classList.add("dragging"))}),window.addEventListener("pointermove",e=>{isDragging&&gsap.set(knife,{y:e.clientY-window.innerHeight/2-30})}),window.addEventListener("pointerup",()=>{if(!isDragging)return;isDragging=!1,knife.classList.remove("dragging");const e=knife.getBoundingClientRect(),t=document.getElementById("cake-svg").getBoundingClientRect();e.top>t.top+50?(gsap.to(knife,{y:60,duration:.3,ease:"power1.in"}),gsap.to("#cut-line",{strokeDashoffset:0,duration:.3,delay:.3}),gsap.to(knife,{y:-200,duration:1,ease:"power2.out",delay:.6}),gsap.to("#scene_cake",{autoAlpha:0,duration:1,delay:1,onComplete:()=>postCakeTl.play()})):gsap.to(knife,{x:-150,y:0,duration:.5,ease:"elastic.out(1,.5)"})});
+            startButton.addEventListener("click",()=>{gsap.to(startScreen,{autoAlpha:0,duration:1,onComplete:()=>{mainContent.style.display="block",gsap.to(mainContent,{autoAlpha:1,duration:1}),gsap.to(cdContainer,{duration:1.5,autoAlpha:1,x:0,ease:"power2.out"}),gsap.to(musicToggleBtn,{autoAlpha:1,duration:1}),audio.play(),preCakeTl.play(),fireworks.start()}})});
+            musicToggleBtn.addEventListener('click',()=>{if(audio.paused){audio.play();musicToggleBtn.innerHTML='<i class="bi bi-pause-circle-fill"></i>'}else{audio.pause();musicToggleBtn.innerHTML='<i class="bi bi-play-circle-fill"></i>'}});
+            replayButton.addEventListener("click",()=>window.location.reload());
+        });
+    </script>
+    <script>
+  function login() {
+    const name = document.getElementById("username").value.trim().toLowerCase();
+    const pass = document.getElementById("password").value.trim();
+    const error = document.getElementById("errorMsg");
+
+    if (name === "mekala" && pass === "2207") {
+      document.getElementById("loginScreen").style.display = "none";
+      document.body.style.overflow = "auto"; // allow scrolling if needed
+    } else {
+      error.style.display = "block";
+    }
+  }
+</script>
+
+</body>
+</html>
